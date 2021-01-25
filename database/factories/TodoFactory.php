@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Todo;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\User;
 
 class TodoFactory extends Factory
 {
@@ -22,10 +23,8 @@ class TodoFactory extends Factory
     public function definition()
     {
         return [
-            'title' => $this->faker->sentence,
-            'body' => $this->faker->paragraph,
-            'completed' => rand(0, 1),
-            'created_by' => rand(1, 10)
+            'name' => $this->faker->sentence,
+            'user_id' => User::all()->random()->id
         ];
     }
 }

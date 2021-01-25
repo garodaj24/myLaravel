@@ -10,149 +10,56 @@ use App\Http\Controllers\Controller;
 
 class TodoController extends Controller
 {
-    protected $user;
-
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->user = $this->guard()->user();
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function index()
     {
-        $todos = $this->user->todos()->get(['id', 'title', 'body', 'completed', 'created_by']);
+        $user = auth('api')->user();
+        $todos = $user->todos()->get(['id', 'name', 'completed_at', 'user_id', 'created_at']);
         return response()->json($todos->toArray());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'body' => 'required|string',
-            'completed' => 'required|boolean'
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+        
+        $user = auth('api')->user();
+        $todo = $user->todos()->create([
+            'name' => $request->name
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'errors' => $validation->errors()
-            ], 400);
-        }
-
-        $todo = new Todo();
-        $todo->title = $request->title;
-        $todo->body = $request->body;
-        $todo->completed = $request->completed;
-
-        if ($this->user->todos()->save($todo)) {
-            return response()->json([
-                'status' => true,
-                'todo' => $todo
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Todo could not be saved"
-            ]);
-        }
+        return response()->json($todo);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
     public function show(Todo $todo)
     {
         return $todo;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Todo $todo)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'body' => 'required|string',
-            'completed' => 'required|boolean'
+        $request->validate([
+            'name' => 'required|string|max:255'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'errors' => $validation->errors()
-            ], 400);
-        }
+        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
 
-        $todo->title = $request->title;
-        $todo->body = $request->body;
-        $todo->completed = $request->completed;
+        $todo->update([
+            "name" => $request->name,
+        ]);
 
-        if ($this->user->todos()->save($todo)) {
-            return response()->json([
-                'status' => true,
-                'todo' => $todo
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Todo could not be updated"
-            ]);
-        }
+        return response()->json($todo);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Todo $todo)
     {
-        if ($todo->delete()) {
-            return response()->json([
-                'status' => true,
-                'todo' => $todo
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Todo could not be deleted"
-            ]);
-        }
-    }
-
-    protected function guard()
-    {
-        return Auth::guard();
+        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
+        $todo->delete();
+        return response()->json($todo);
     }
 }
