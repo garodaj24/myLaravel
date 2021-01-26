@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 
 class TodoController extends Controller
 {
@@ -18,7 +19,7 @@ class TodoController extends Controller
     public function index()
     {
         $user = auth('api')->user();
-        $todos = $user->todos()->get(['id', 'name', 'completed_at', 'user_id', 'created_at']);
+        $todos = $user->todos()->orderBy("id", "desc")->get();
         return response()->json($todos->toArray());
     }
 
@@ -33,11 +34,12 @@ class TodoController extends Controller
             'name' => $request->name
         ]);
 
-        return response()->json($todo);
+        return response()->json($todo->refresh());
     }
 
     public function show(Todo $todo)
     {
+        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
         return $todo;
     }
 
@@ -53,13 +55,28 @@ class TodoController extends Controller
             "name" => $request->name,
         ]);
 
-        return response()->json($todo);
+        return response()->json($todo->refresh());
     }
 
     public function destroy(Todo $todo)
     {
         abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
         $todo->delete();
+        return response()->json($todo);
+    }
+
+    public function complete(Request $request, Todo $todo)
+    {
+        $request->validate([
+            'completed' => 'required|boolean'
+        ]);
+
+        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
+
+        $todo->update([
+            "completed_at" => $request->completed ? Carbon::now() : null
+        ]);
+        
         return response()->json($todo);
     }
 }

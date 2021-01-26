@@ -24,7 +24,18 @@ Route::group([
     Route::post('refresh', 'AuthController@refresh');
 });
 
-Route::resource('todos', 'TodoController');
+Route::group([
+    'prefix' => 'todos'
+], function($router) {
+    Route::get('/', 'TodoController@index')->name('todos.index');
+    Route::get('/{todo}', 'TodoController@show')->name('todos.show');
+    Route::post('/', 'TodoController@store')->name('todos.store');
+    Route::put('/{todo}', 'TodoController@update')->name('todos.update');
+    Route::delete('/{todo}', 'TodoController@destroy')->name('todos.destroy');
+    Route::put('/{todo}/complete', 'TodoController@complete')->name('todos.complete');
+});
+
+Route::resource('users', 'UserController');
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();
