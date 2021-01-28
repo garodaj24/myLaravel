@@ -35,7 +35,15 @@ Route::group([
     Route::put('/{todo}/complete', 'TodoController@complete')->name('todos.complete');
 });
 
-Route::resource('users', 'UserController');
+Route::group([
+    'prefix' => 'users'
+], function($router) {
+    Route::get('/', 'UserController@index')->name('users.index');
+    Route::get('/{user}', 'UserController@show')->name('users.show');
+    Route::post('/', 'UserController@store')->name('users.store')->middleware('admin');
+    Route::put('/{user}', 'UserController@update')->name('users.update')->middleware('admin');
+    Route::delete('/{user}', 'UserController@destroy')->name('users.destroy')->middleware('admin');
+});
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();

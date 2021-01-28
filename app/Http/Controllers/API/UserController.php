@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 
@@ -18,7 +19,6 @@ class UserController extends Controller
 
     public function index()
     {
-        // $user = auth('api')->user();
         $users = User::all();
         return response()->json($users->toArray());
     }
@@ -27,11 +27,10 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:App\Models\User,email|email:rfc,dns',
+            'email' => 'required|string|max:255|email:rfc,dns|unique:users,email',
             'password' => 'required|string|max:255'
         ]);
         
-        $user = auth('api')->user();
         $newUser = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -50,11 +49,9 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:App\Models\User,email|email:rfc,dns',
+            'email' => 'required|string|max:255|email:rfc,dns|unique:users,email,'.$user->id,
             'password' => 'required|string|max:255'
         ]);
-
-        // abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
 
         $user->update([
             'name' => $request->name,
@@ -67,7 +64,6 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        // abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
         $user->delete();
         return response()->json($user);
     }
