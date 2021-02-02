@@ -40,9 +40,9 @@ Route::group([
 ], function($router) {
     Route::get('/', 'UserController@index')->name('users.index');
     Route::get('/{user}', 'UserController@show')->name('users.show');
-    Route::post('/', 'UserController@store')->name('users.store')->middleware('admin');
-    Route::put('/{user}', 'UserController@update')->name('users.update')->middleware('admin');
-    Route::delete('/{user}', 'UserController@destroy')->name('users.destroy')->middleware('admin');
+    Route::post('/', 'UserController@store')->name('users.store');
+    Route::put('/{user}', 'UserController@update')->name('users.update');
+    Route::delete('/{user}', 'UserController@destroy')->name('users.destroy');
 });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
