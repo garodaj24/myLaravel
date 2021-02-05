@@ -18,9 +18,7 @@ class TodoController extends Controller
 
     public function index()
     {
-        $user = auth('api')->user();
-        $todos = $user->todos()->orderBy("id", "desc")->get();
-        return response()->json($todos->toArray());
+        return response()->json(Todo::orderBy("id", "desc")->get());
     }
 
     public function store(Request $request)
@@ -39,7 +37,6 @@ class TodoController extends Controller
 
     public function show(Todo $todo)
     {
-        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
         return $todo;
     }
 
@@ -48,8 +45,6 @@ class TodoController extends Controller
         $request->validate([
             'name' => 'required|string|max:255'
         ]);
-
-        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
 
         $todo->update([
             "name" => $request->name,
@@ -60,7 +55,6 @@ class TodoController extends Controller
 
     public function destroy(Todo $todo)
     {
-        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
         $todo->delete();
         return response()->json($todo);
     }
@@ -70,8 +64,6 @@ class TodoController extends Controller
         $request->validate([
             'completed' => 'required|boolean'
         ]);
-
-        abort_if($todo->user_id !== auth('api')->id(), 403, "Unauthorized");
 
         $todo->update([
             "completed_at" => $request->completed ? Carbon::now() : null
