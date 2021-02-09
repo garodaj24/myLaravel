@@ -6,9 +6,11 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -51,13 +53,32 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255|email:rfc,dns|unique:users,email,'.$user->id,
-            'password' => 'required|string|max:255'
+            'password' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $fileName = (string) Str::uuid() . '.' . $image->getClientOriginalExtension();
+
+            if ($image->getClientOriginalName() !== $user->image->original_file_name) {
+                $user->image()->delete();
+                Storage::disk('public')->delete("images/$user->id"."/".$user->image->storage_uuid);
+                $user->image()->create([
+                    'storage_uuid' => $fileName,
+                    'original_file_name' => $image->getClientOriginalName(),
+                ]);
+                $image->storeAs("images/$user->id", $fileName, 'public');
+            }
+
+
+        }
 
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password)
+            'password' => $request->has('password') ? bcrypt($request->password) : $user->password,
+            'image' => $request->image
         ]);
 
         return response()->json($user);

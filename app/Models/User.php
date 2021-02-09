@@ -57,4 +57,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Todo::class);
     }
+
+    public function image()
+    {
+        return $this->hasOne(Media::class);
+    }
+
+    public function getAuthPassword() {
+        return $this->password;
+    }
 }

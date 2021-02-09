@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -28,6 +29,7 @@ class AuthController extends Controller
         $token_validity = 24 * 60;
 
         $this->guard()->factory()->setTTL($token_validity);
+
 
         if (!$token = $this->guard()->attempt($validator->validated())) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -67,7 +69,7 @@ class AuthController extends Controller
 
     public function profile()
     {
-        return response()->json($this->guard()->user());
+        return response()->json(User::with(['image'])->find(auth('api')->id()));
     }
 
     public function refresh()
