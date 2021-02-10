@@ -33,6 +33,9 @@ Route::group([
     Route::put('/{todo}', 'TodoController@update')->name('todos.update');
     Route::delete('/{todo}', 'TodoController@destroy')->name('todos.destroy');
     Route::put('/{todo}/complete', 'TodoController@complete')->name('todos.complete');
+
+    Route::post('/{todo}/categories/add', 'TodoController@toggleCategories')->name('todos.categories.add');
+
 });
 
 Route::group([
