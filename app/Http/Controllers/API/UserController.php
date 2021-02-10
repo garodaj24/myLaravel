@@ -17,7 +17,7 @@ class UserController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->middleware('admin');
+        $this->middleware('admin', ['except' => 'index']);
     }
 
     public function index()
@@ -61,9 +61,11 @@ class UserController extends Controller
             $image = $request->file('image');
             $fileName = (string) Str::uuid() . '.' . $image->getClientOriginalExtension();
 
-            if ($image->getClientOriginalName() !== $user->image->original_file_name) {
-                $user->image()->delete();
-                Storage::disk('public')->delete("images/$user->id"."/".$user->image->storage_uuid);
+            if (!$user->image || $image->getClientOriginalName() !== $user->image->original_file_name) {
+                if ($user->image) {
+                    $user->image()->delete();
+                    Storage::disk('public')->delete("images/$user->id"."/".$user->image->storage_uuid);
+                }
                 $user->image()->create([
                     'storage_uuid' => $fileName,
                     'original_file_name' => $image->getClientOriginalName(),
