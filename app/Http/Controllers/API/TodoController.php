@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Category;
 use App\Models\Todo;
+use App\Http\Resources\TodoResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -19,21 +20,25 @@ class TodoController extends Controller
 
     public function index()
     {
-        return response()->json(Todo::orderBy("id", "desc")->get());
+        return TodoResource::collection(Todo::orderBy("id", "desc")->get());
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'categories'   => 'array',
+            'categories.*' => 'exists:categories,id'
         ]);
 
         $user = auth('api')->user();
         $todo = $user->todos()->create([
-            'name' => $request->name
+            'name' => $request->name,
         ]);
 
-        return response()->json($todo->refresh());
+        $todo->categories()->sync($request->categories);
+
+        return TodoResource::make($todo->refresh());
     }
 
     public function show(Todo $todo)
@@ -44,14 +49,18 @@ class TodoController extends Controller
     public function update(Request $request, Todo $todo)
     {
         $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'categories'   => 'array',
+            'categories.*' => 'exists:categories,id'
         ]);
 
         $todo->update([
             "name" => $request->name,
         ]);
 
-        return response()->json($todo->refresh());
+        $todo->categories()->sync($request->categories);
+
+        return TodoResource::make($todo->refresh());
     }
 
     public function destroy(Todo $todo)
@@ -83,7 +92,7 @@ class TodoController extends Controller
 
 //        dd(Category::whereIn('id', $request->categories)->get()->toArray());
 //
-//        dd($request->all());
+    //    dd($request->all());
 
 //        $user->todo()->create([]); // Simple relations
 
@@ -92,26 +101,32 @@ class TodoController extends Controller
         // 3. $todo->categories()->detach($request->categories); // always delete
         // 4. $todo->categories()->syncWithoutDetaching($request->categories) // only add without delete
 
-        $todo->categories()->sync($request->categories);
-
+        
         // 1. $todo->categories; // get todo categories
         // 2. $todo->categories()->get() // get todo categories
-
+        
         // 1. $todo->categories()->exists() // check if exists some Model relationship
-
-//
-//        $todos = Todo::where('created_at', '<=', Carbon::today()->subDay())
-//            ->whereNull('completed_at')
-//            ->has('categories') // ->doesntHave('categories')
-//            ->whereHas('user', function($query) {
-//                $query->where('is_admin', true); // will be applied to users table rows
-//            })
-//            ->orderBy('created_at', 'desc')
-//            ->get();
-//
-//        dd($todos->toArray());
+        
+        //
+        //        $todos = Todo::where('created_at', '<=', Carbon::today()->subDay())
+        //            ->whereNull('completed_at')
+        //            ->has('categories') // ->doesntHave('categories')
+        //            ->whereHas('user', function($query) {
+            //                $query->where('is_admin', true); // will be applied to users table rows
+            //            })
+            //            ->orderBy('created_at', 'desc')
+            //            ->get();
+            //
+            //        dd($todos->toArray());
+            
+        $todo->categories()->sync($request->categories);
 
         return $todo->categories;
 
+    }
+
+    public function getCategories()
+    {
+        return response()->json(Category::all());
     }
 }

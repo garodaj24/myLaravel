@@ -48,6 +48,4 @@ Route::group([
     Route::delete('/{user}', 'UserController@destroy')->name('users.destroy');
 });
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::get('/categories', 'TodoController@getCategories')->name('todos.categories');
